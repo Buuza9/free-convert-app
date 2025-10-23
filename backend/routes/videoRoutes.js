@@ -1,6 +1,6 @@
 import express from "express";
 import multer from "multer";
-import { convertVideo } from "../controllers/videoControllers.js";
+import { convertVideo } from "../controllers/videoController.js";
 
 const router = express.Router();
 
