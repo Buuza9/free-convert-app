@@ -1,7 +1,6 @@
 import express from "express";
-import multer from "multer";
-import { convertAudio } from "../controllers/audiocontroller";
-import { convertVideo } from "../controllers/videoController";
+import { upload } from "../config/uploadConfig.js";
+import { convertAudio } from "../controllers/audioController.js";
 
 const router = express.Router();
 
@@ -13,16 +12,16 @@ Configure multer for uploading files.
 }
 */
 
-const storage = multer.diskStorage({
-	destination: (req, file, cb) => {
-		cb(null, "uploads/");
-	},
-	filename: (req, file, cb) => {
-		cb(null, `${Date.now()}-${file.originalname}`);
-	},
-});
+// const storage = multer.diskStorage({
+// 	destination: (req, file, cb) => {
+// 		cb(null, "uploads/");
+// 	},
+// 	filename: (req, file, cb) => {
+// 		cb(null, `${Date.now()}-${file.originalname}`);
+// 	},
+// });
 
-const upload = multer({ storage });
+// const upload = multer({ storage });
 
 /**
  * Defien API endpoint for audio conversion
