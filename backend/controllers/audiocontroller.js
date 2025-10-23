@@ -1,6 +1,7 @@
 import ffmpeg from "fluent-ffmpeg"; // FFmpeg handles all the audio/video format conversions
 import fs from "fs"; // Node's filesystem module — used to delete temporary files
 import path from "path"; // Helps us manage file paths safely across systems
+import { getOutputFolder } from "../utils/getOutputFolder.js";
 
 export const convertAudio = (req, res) => {
 	try {
@@ -23,9 +24,13 @@ export const convertAudio = (req, res) => {
 		//path of the uploaded file
 		const inputPath = req.file.path;
 		//define a unique output file name
-		const outputFileName = `${Date.now()}_converted.${format}`;
-		//define a path, where the converted file need to be saved.
-		const outputPath = path.join("converted", outputFileName);
+
+		const baseName = path.parse(req.file.originalname).name;
+
+		// Dynamic folder based on target format
+		const outputFolder = getOutputFolder(format);
+		const outputFileName = `${Date.now()}_${baseName}_converted.${format}`;
+		const outputPath = path.join(outputFolder, outputFileName);
 
 		//Convert the file using FFmpeg
 		ffmpeg(inputPath)
@@ -37,9 +42,11 @@ export const convertAudio = (req, res) => {
 				fs.unlinkSync(inputPath);
 
 				//respond to frontend or API client with the convertd file url
-				res.status(200).json({
+				res.json({
 					message: "File has been converted successfully.",
-					downloadUrl: `/converted/${outputFileName}`,
+					downloadUrl: `/converted/${path.basename(
+						outputFolder
+					)}/${outputFileName}`,
 				});
 			})
 			.on("error", (err) => {
