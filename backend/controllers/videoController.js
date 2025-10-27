@@ -5,7 +5,6 @@ import Ffmpeg from "fluent-ffmpeg";
 import { getOutputFolder } from "../utils/getOutputFolder.js";
 
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 export const convertVideo = (req, res) => {
 	try {

@@ -1,59 +1,89 @@
 import path from "path";
 import fs from "fs";
-import getOutputFolder from "../config/uploadConfig";
 import Ffmpeg from "fluent-ffmpeg";
+import { fileURLToPath } from "url";
+
+// Fix __dirname for ESM
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Map input formats to FFmpeg-compatible formats
+const FORMAT_MAP = {
+	jpg: "mjpeg",
+	jpeg: "mjpeg",
+	png: "png",
+	bmp: "bmp",
+	webp: "webp",
+};
+
+// Base folders
+const CONVERTED_FOLDER = path.join(__dirname, "../converted");
+
+// Ensure base converted folder exists
+if (!fs.existsSync(CONVERTED_FOLDER))
+	fs.mkdirSync(CONVERTED_FOLDER, { recursive: true });
 
 export const convertImage = (req, res) => {
 	try {
-		if (!req.file) {
+		if (!req.file)
+			return res.status(400).json({ error: "No file uploaded." });
+
+		let { format } = req.body;
+		if (!format)
+			return res
+				.status(400)
+				.json({ error: "Output format is required." });
+
+		format = format.toLowerCase();
+
+		if (!(format in FORMAT_MAP)) {
 			return res.status(400).json({
-				error: "No file uploaded.",
+				error: "Unsupported format.",
+				supportedFormats: Object.keys(FORMAT_MAP),
 			});
 		}
 
-		//Get the format form the request body
-		const { format } = req.body;
-
-		if (!format) {
-			return res.status(400).json({
-				error: "Output format is required.",
-			});
-		}
-
+		const ffmpegFormat = FORMAT_MAP[format];
 		const inputPath = req.file.path;
 		const baseName = path.parse(req.file.originalname).name;
 
-		//Dynamic folder base do nthe targetd fomrat
-		const outputFolder = getOutputFolder(format);
+		// Create format-specific folder in converted/image/
+		const formatFolder = path.join(CONVERTED_FOLDER, "image", format);
+		if (!fs.existsSync(formatFolder))
+			fs.mkdirSync(formatFolder, { recursive: true });
+
 		const outputFileName = `${Date.now()}_${baseName}_converted.${format}`;
-		const outputPath = path.join(outputFolder, outputFileName);
+		const outputPath = path.join(formatFolder, outputFileName);
 
-		//Convert the image to the targeted format.
+		// Perform conversion
 		Ffmpeg(inputPath)
-			.toFormat(format)
+			.toFormat(ffmpegFormat)
 			.on("end", () => {
-				console.log("Image has been converted successfully");
+				console.log("Image converted successfully");
 
-				//remove image from uploads file
+				// Remove uploaded file
 				fs.unlinkSync(inputPath);
 
-				//respond to frontend or API client with feedback message and converted URL
 				res.status(200).json({
 					message: "Image converted successfully.",
-					downloadUrl: `/converted/${path.basename(
-						outputFolder
-					)}/${outputFileName}`,
+					downloadUrl: `/converted/image/${format}/${outputFileName}`,
 				});
 			})
 			.on("error", (err) => {
-				console.error("An errro has occured.", err);
+				console.error("Conversion error:", err);
+				if (fs.existsSync(inputPath)) fs.unlinkSync(inputPath);
+
 				res.status(500).json({
-					error: "An error has occured.",
+					error: "Error during conversion.",
 					details: err.message,
 				});
 			})
 			.save(outputPath);
 	} catch (error) {
-		console.log(`An errro occured. ${error}`);
+		console.error("Internal error:", error);
+		res.status(500).json({
+			error: "Internal server error.",
+			details: error.message,
+		});
 	}
 };
