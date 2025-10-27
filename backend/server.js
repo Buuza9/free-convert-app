@@ -17,8 +17,8 @@ app.use("/converted", express.static("converted"));
 
 //Register routse for video and audio conversion
 app.use("/api/videos", videoRoutes);
-app.use("/api/audio", audioRoutes);
-app.use("/api/image", imageRoutes);
+app.use("/api/audios", audioRoutes);
+app.use("/api/images", imageRoutes);
 
 app.get("/", (req, res) => {
 	res.send("Your video converter website is running sucesssfully");
