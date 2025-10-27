@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import videoRoutes from "./routes/videoRoutes.js";
 import audioRoutes from "./routes/audioRoutes.js";
+import imageRoutes from "./routes/imageRoutes.js";
 import bodyParser from "body-parser";
 
 const app = express();
@@ -17,6 +18,7 @@ app.use("/converted", express.static("converted"));
 //Register routse for video and audio conversion
 app.use("/api/videos", videoRoutes);
 app.use("/api/audio", audioRoutes);
+app.use("/api/image", imageRoutes);
 
 app.get("/", (req, res) => {
 	res.send("Your video converter website is running sucesssfully");
