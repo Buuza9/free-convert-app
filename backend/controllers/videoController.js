@@ -9,17 +9,23 @@ const __dirname = path.dirname(__filename);
 
 export const convertVideo = (req, res) => {
 	try {
-		if (!req.file)
-			return res.status(400).json({ error: "No file uploaded" });
+		if (!req.file) {
+			return res.status(400).json({
+				error: "No file uploaded.",
+			});
+		}
+
 		const { format } = req.body;
 
-		if (!format)
-			return res.status(400).json({ error: "Output format is required" });
+		if (!format) {
+			return res.status(400).json({
+				error: "Output format is required.",
+			});
+		}
 
 		const inputPath = req.file.path;
 		const baseName = path.parse(req.file.originalname).name;
 
-		// Dynamic folder based on target format
 		const outputFolder = getOutputFolder(format);
 		const outputFileName = `${Date.now()}_${baseName}_converted.${format}`;
 		const outputPath = path.join(outputFolder, outputFileName);
@@ -27,25 +33,27 @@ export const convertVideo = (req, res) => {
 		Ffmpeg(inputPath)
 			.toFormat(format)
 			.on("end", () => {
-				console.log("File conversion completed.");
-				fs.unlinkSync(inputPath); // delete original file
+				console.log("File conversion is completed.");
+				fs.unlinkSync(inputPath);
 				res.json({
-					message: "File has been converted successfully.",
+					message: "File has been convertd succesfully.",
 					downloadUrl: `/converted/${path.basename(
 						outputFolder
 					)}/${outputFileName}`,
 				});
 			})
 			.on("error", (err) => {
-				console.error("FFmpeg error:", err);
+				console.error("Ffmpeg error: ", err);
 				res.status(500).json({
-					error: "Conversion failed",
+					error: "Conversion failed. Plase try again.",
 					details: err.message,
 				});
 			})
 			.save(outputPath);
 	} catch (err) {
-		console.error(err);
-		res.status(500).json({ error: "Internal server error" });
+		console.log(err);
+		res.status(500).json({
+			error: "An internal error occured.",
+		});
 	}
 };
