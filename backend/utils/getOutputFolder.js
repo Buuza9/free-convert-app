@@ -23,3 +23,5 @@ export const getOutputFolder = (format) => {
 
 	return folderPath;
 };
+
+export default getOutputFolder;
